@@ -1,26 +1,27 @@
 from _thread import start_new_thread
 from socket import *
+# import pyaudio
+import time
+
+frames = []
 
 
-def ReceiveFromServer(port_number):
-    server_port = port_number
-    server_ip = '127.0.0.1'
-    serverSocket = socket(AF_INET, SOCK_DGRAM)
-    serverSocket.bind((server_ip, server_port))
-    print("Server is reade for receiving data...")
+def ReceiveFromServer(udp_clientSocket):
+    data, clientAddress = udp_clientSocket.recvfrom(1024)
+    f = open(r"audio/kir_{0}.mp3".format(time.time()), 'wb+')
+    while data:
+        f.write(data)
+        frames.append(data)
+        data, clientAddress = udp_clientSocket.recvfrom(1024)
+    f.close()
 
-    data, clientAddress = serverSocket.recvfrom(1024)
-    f = open(r"audio/f1.mp3", 'wb+')
-    try:
-        while data:
-            f.write(data)
-            data, clientAddress = serverSocket.recvfrom(1024)
-            # serverSocket.settimeout(2)
-            # serverSocket.sendto, clientAddress)
-    except timeout:
-        f.close()
-        serverSocket.close()
-        print("File Downloaded.")
+
+def play(stream, CHUNK):
+    BUFFER = 10
+    while True:
+        if len(frames) == BUFFER:
+            while True:
+                stream.write(frames.pop(0), CHUNK)
 
 
 def sendFromClient(udp_port_number, file_name):
@@ -36,7 +37,7 @@ def sendFromClient(udp_port_number, file_name):
             data = f1.read(buf)
     else:
         print("file sent")
-        clientSocket.sendto(bytes("kir",encoding='utf8'), (serverName, serverPort))
+        clientSocket.sendto(bytes("kir", encoding='utf8'), (serverName, serverPort))
     # clientSocket.sendto(message.encode(),(serverName, serverPort))
     # modifiedMessage, serverAddress = clientSocket.recvfrom(2048)
     # print(modifiedMessage.decode())
@@ -62,9 +63,8 @@ clientSocket = socket(AF_INET, SOCK_STREAM)
 clientSocket.connect((serverName, serverPort))
 serverName = '127.0.0.1'
 udp_clientSocket = socket(AF_INET, SOCK_DGRAM)
-udp_clientSocket.sendto("hello".encode(),(serverName,udp_server_port))
+udp_clientSocket.sendto("hello".encode(), (serverName, udp_server_port))
 start_new_thread(clientSendThread, (clientSocket,))
-
 
 while 1:
     response = clientSocket.recv(1024)
@@ -73,13 +73,15 @@ while 1:
     print(status)
     if status == "accepted":
         sendFromClient(12001, deserialize_response["file_name"])  # upload from c1 to server
-    elif status=="ack":
+    elif status == "ack":
         print("file downloaded")
+        # FORMAT = pyaudio.paInt16
         data, clientAddress = udp_clientSocket.recvfrom(1024)
-        f = open(r"audio/kir.mp3", 'wb+')
+        f = open(r"audio/kirCos.mp3", 'wb+')
         while data:
             f.write(data)
             data, clientAddress = udp_clientSocket.recvfrom(1024)
         f.close()
-    # _input = input()
+
+# _input = input()
 # clientSocket.close()

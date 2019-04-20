@@ -78,7 +78,7 @@ def clientThread(conn, addr):
             clA = conn_sockets[kirB]
             clA.send(ser_data.encode())  # server request to client A to send his file...
             print(udp_sockets)
-            serverReciveThenSend(12001, clA, udp_sockets[kirB])  # server waiting to receive file from client A then send it to client B
+            serverReciveThenSend(12001, conn, udp_sockets[kir])  # server waiting to receive file from client A then send it to client B
             print("file downloaded")
 
         elif decode_command == "n":  # client c2 reject connection from client c1
